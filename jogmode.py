@@ -1,7 +1,15 @@
 from pynput import keyboard
+import serial
+import time
  
+PORT = '/dev/ttyUSB0'
+BAUD = 250000
 STEP = 10
+FEEDRATE = 3000
 pos = {'x': 0, 'y': 0, 'z': 0}
+
+ser = serial.Serial(PORT, BAUD, timeout=1)
+time.sleep(2)
 
 def on_press(key):
     if key == keyboard.Key.up:
@@ -40,12 +48,24 @@ def on_release(key):
 
     if key == keyboard.Key.esc:
         return False
- 
+
+def send(cmd):
+    ser.write(f"{cmd}\n".encode())
+
+def setup():
+    send("G91")
+
 def main():
+    setup()
+
     print("Listening for arrow keys. Press ESC to quit.")
     with keyboard.Listener(on_press=on_press, on_release=on_release, suppress=True) as listener:
         while listener.running:
             print(f"x: {pos['x']} y: {pos['y']} z: {pos['z']}")
+            
+            if pos['x'] != 0:
+                send(f"G1 X{pos['x']} F{FEEDRATE}")
+
 
     print("Exited.")
  
