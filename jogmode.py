@@ -20,9 +20,9 @@ def on_press(key):
         pos['y'] = -STEP
 
     if key == keyboard.Key.left:
-        pos['x'] = -STEP
-    elif key == keyboard.Key.right:
         pos['x'] = STEP
+    elif key == keyboard.Key.right:
+        pos['x'] = -STEP
 
     if key == keyboard.Key.page_up:
         pos['z'] = STEP
@@ -38,9 +38,9 @@ def on_release(key):
     if key == keyboard.Key.down and pos['y'] < 0:
         pos['y'] = 0
 
-    if key == keyboard.Key.left and pos['x'] < 0:
+    if key == keyboard.Key.left and pos['x'] > 0:
         pos['x'] = 0
-    if key == keyboard.Key.right and pos['x'] > 0:
+    if key == keyboard.Key.right and pos['x'] < 0:
         pos['x'] = 0
 
     if key == keyboard.Key.page_up and pos['z'] > 0:
