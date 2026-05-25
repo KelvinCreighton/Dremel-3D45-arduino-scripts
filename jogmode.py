@@ -4,8 +4,10 @@ import time
  
 PORT = '/dev/ttyUSB0'
 BAUD = 250000
-STEP = 10
+STEP = 1
 FEEDRATE = 3000
+TICK = 0.02
+
 pos = {'x': 0, 'y': 0, 'z': 0}
 
 ser = serial.Serial(PORT, BAUD, timeout=1)
@@ -53,7 +55,12 @@ def send(cmd):
     ser.write(f"{cmd}\n".encode())
 
 def setup():
-    send("G91")
+    send("G91") # set absolute mode
+
+def teardown():
+    send("G90") # restore absolute mode
+    send("M84") # release steppers
+    ser.close()
 
 def main():
     setup()
@@ -61,12 +68,18 @@ def main():
     print("Listening for arrow keys. Press ESC to quit.")
     with keyboard.Listener(on_press=on_press, on_release=on_release, suppress=True) as listener:
         while listener.running:
-            print(f"x: {pos['x']} y: {pos['y']} z: {pos['z']}")
-            
-            if pos['x'] != 0:
-                send(f"G1 X{pos['x']} F{FEEDRATE}")
+            x, y, z = pos['x'], pos['y'], pos['z']
+            if x != 0 or y != 0 or z != 0:
+                print(f"x: {x} y: {y} z: {z}")
+                cmd = f"G1"
+                if x != 0: cmd += f" X{x}"
+                if y != 0: cmd += f" Y{y}"
+                if z != 0: cmd += f" Z{z}"
+                cmd += f" F{FEEDRATE}"
+                send(cmd)
+            time.sleep(TICK)
 
-
+    teardown()
     print("Exited.")
  
 if __name__ == "__main__":
