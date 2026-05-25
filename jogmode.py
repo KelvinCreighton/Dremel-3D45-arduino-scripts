@@ -5,6 +5,7 @@ import time
 PORT = '/dev/ttyUSB0'
 BAUD = 250000
 STEP = 1
+ZSTEP = 0.1
 FEEDRATE = 3000
 TICK = 0.02
 
@@ -25,9 +26,9 @@ def on_press(key):
         pos['x'] = -STEP
 
     if key == keyboard.Key.page_up:
-        pos['z'] = STEP
+        pos['z'] = ZSTEP
     elif key == keyboard.Key.page_down:
-        pos['z'] = -STEP
+        pos['z'] = -ZSTEP
 
     if key == keyboard.Key.esc:
         return False
