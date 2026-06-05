@@ -8,23 +8,22 @@ BAUD = 250000
  
 ser = serial.Serial(PORT, BAUD, timeout=1)
 time.sleep(2)
+ser.flushInput()
  
 abort_flag = threading.Event()
  
  
-def emergency_abort():
-    """Send emergency stop and kill the program immediately."""
-    print("\n!!! EMERGENCY ABORT !!!")
+def shutdown():
+    """Send program shutdown by triggering Arduino reset."""
     try:
-        ser.write(b"M112\n")       # Emergency stop — halts all motion immediately
-        ser.flush()
-        ser.write(b"M84\n")        # Disable all steppers
-        ser.flush()
-    except Exception:
-        pass
+        ser.dtr = False
+        time.sleep(0.1)
+        ser.dtr = True
+        time.sleep(0.1)
+        ser.dtr = False
     finally:
         ser.close()
-        sys.exit(1)
+        sys.exit(0)
  
  
 def send_gcode(command):
@@ -40,7 +39,7 @@ def send_gcode(command):
     # Wait for 'ok' back from printer
     while True:
         if abort_flag.is_set():
-            emergency_abort()
+            shutdown()
         line = ser.readline().decode(errors='ignore').strip()
         if line:
             print(f"  << {line}")
@@ -54,8 +53,7 @@ def send_gcode(command):
 def main():
     print("G-code Executor Ready")
     print("  Type a G-code command and press Enter to send.")
-    print("  Type 'exit' or 'quit' to close normally.")
-    print("  Press Ctrl+C at any time for EMERGENCY ABORT.\n")
+    print("  Press Ctrl+C at any time to shut down.\n")
  
     try:
         while True:
@@ -64,19 +62,15 @@ def main():
             except EOFError:
                 break
  
-            if cmd.lower() in ('exit', 'quit'):
-                print("Closing connection.")
-                ser.close()
-                sys.exit(0)
- 
             if cmd:
                 send_gcode(cmd)
  
     except KeyboardInterrupt:
         abort_flag.set()
-        emergency_abort()
+        shutdown()
  
  
 if __name__ == "__main__":
     main()
+ 
 
